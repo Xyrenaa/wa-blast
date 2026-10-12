@@ -44,10 +44,16 @@ class WhatsAppService
     public function send(string $number, string $message): array
     {
         try {
-            $res = $this->http()->post('/send', ['number' => $number, 'message' => $message]);
+            $res = $this->http()->timeout(45)->post('/send', ['number' => $number, 'message' => $message]);
 
             return $res->json() ?? ['ok' => false, 'error' => 'Respons WA service tidak valid'];
         } catch (ConnectionException $e) {
+            // Timeout berbeda dari service mati: permintaan sudah sampai dan pesan mungkin sudah terkirim.
+            // Jangan dianggap "WA mati" (nanti dikirim ulang saat Lanjutkan, jadi dobel); tandai gagal tidak pasti.
+            if (str_contains($e->getMessage(), 'cURL error 28')) {
+                return ['ok' => false, 'error' => 'WA service tidak merespons tepat waktu, pesan mungkin sudah terkirim. Cek manual di WhatsApp'];
+            }
+
             return ['ok' => false, 'error' => 'WA service tidak bisa dihubungi'];
         }
     }

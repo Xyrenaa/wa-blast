@@ -19,6 +19,37 @@
     <button id="wa-logout" class="hidden min-h-[44px] px-4 rounded-lg border border-slate-300 text-sm font-bold">Putuskan Koneksi</button>
   </div>
 </div>
+
+<div class="mt-5 grid gap-4 sm:grid-cols-3">
+  <div class="rounded-2xl border border-slate-200 bg-white p-5"><div class="text-xs font-semibold text-slate-500">Pesan terkirim bulan ini</div><div class="my-1 text-3xl font-extrabold">{{ number_format($sentThisMonth, 0, ',', '.') }}</div></div>
+  <div class="rounded-2xl border border-slate-200 bg-white p-5"><div class="text-xs font-semibold text-slate-500">Pesan gagal bulan ini</div><div class="my-1 text-3xl font-extrabold text-red-700">{{ number_format($failedThisMonth, 0, ',', '.') }}</div></div>
+  <div class="rounded-2xl border border-slate-200 bg-white p-5"><div class="text-xs font-semibold text-slate-500">Mahasiswa di database</div><div class="my-1 text-3xl font-extrabold">{{ number_format($totalStudents, 0, ',', '.') }}</div></div>
+</div>
+
+<div class="mt-5 rounded-2xl border border-slate-200 bg-white p-5">
+  <div class="mb-2 flex items-center justify-between">
+    <h2 class="text-base font-extrabold">Riwayat Blast Terakhir</h2>
+    <a href="{{ route('blasts.index') }}" class="text-sm font-bold text-emerald-700">Lihat semua</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead><tr class="border-b border-slate-200 text-xs text-slate-500"><th class="p-3">Judul</th><th class="p-3">Pesan</th><th class="p-3">Gagal</th><th class="p-3">Status</th><th class="p-3">Waktu</th></tr></thead>
+      <tbody>
+        @forelse ($recent as $b)
+          <tr class="border-b border-slate-100">
+            <td class="p-3 font-bold"><a href="{{ route('blasts.show', $b) }}" class="text-emerald-800 underline">{{ $b->judul }}</a></td>
+            <td class="p-3">{{ $b->total }}</td>
+            <td class="p-3">{{ $b->failed_count }}</td>
+            <td class="p-3">@include('blasts._status', ['status' => $b->status])</td>
+            <td class="p-3">{{ ($b->scheduled_at ?? $b->created_at)->format('d M Y H:i') }}</td>
+          </tr>
+        @empty
+          <tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada blast.</td></tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+</div>
 @endsection
 
 @push('scripts')

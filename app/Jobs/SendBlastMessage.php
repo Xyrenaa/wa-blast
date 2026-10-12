@@ -27,6 +27,10 @@ class SendBlastMessage implements ShouldQueue
     // Error yang berarti WhatsApp bermasalah (bukan salah penerima)
     private const WA_DOWN = ['WhatsApp belum terhubung', 'WA service tidak bisa dihubungi', 'Unauthorized'];
 
+    // Request ke WA service paling lama 45 detik, jadi pesan yang masih "sending" lebih dari ini
+    // pasti terputus (worker dimatikan/restart saat mengirim)
+    private const STALE_SECONDS = 60;
+
     public function __construct(public int $blastId)
     {
     }
@@ -41,12 +45,20 @@ class SendBlastMessage implements ShouldQueue
             $blast->update(['status' => 'running', 'started_at' => now()]);
         }
 
-        // Pesan yang menggantung >5 menit (worker sempat mati) dianggap gagal, tidak dikirim ulang
-        $blast->messages()->where('status', 'sending')->where('updated_at', '<', now()->subMinutes(5))
-            ->update(['status' => 'failed', 'error' => 'Proses terhenti saat mengirim, cek manual di WhatsApp', 'updated_at' => now()]);
+        // Pesan yang menggantung (worker sempat mati) dianggap gagal, tidak dikirim ulang
+        // karena bisa jadi sudah terkirim
+        $blast->messages()->where('status', 'sending')->where('updated_at', '<', now()->subSeconds(self::STALE_SECONDS))
+            ->update(['status' => 'failed', 'error' => 'Proses terhenti saat mengirim, status tidak pasti. Cek manual di WhatsApp', 'updated_at' => now()]);
 
         $msg = $blast->messages()->where('status', 'pending')->orderBy('id')->first();
         if (! $msg) {
+            // Masih ada pesan yang sedang dikirim (atau job sebelumnya terputus): jangan tandai selesai dulu.
+            // Cek lagi sebentar; kalau ternyata terputus, ia akan ditandai gagal oleh pembersihan di atas.
+            if ($blast->messages()->where('status', 'sending')->exists()) {
+                self::dispatch($blast->id)->delay(now()->addSeconds(15));
+
+                return;
+            }
             $this->finish($blast);
 
             return;

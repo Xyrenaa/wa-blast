@@ -4,9 +4,14 @@
 @section('content')
 @php $btn = 'inline-flex min-h-[44px] items-center justify-center rounded-lg px-4 text-sm font-bold'; @endphp
 
-<a href="{{ route('blasts.index') }}" class="text-sm font-bold text-emerald-700">&larr; Riwayat Blast</a>
+<a href="{{ route('blasts.index') }}" class="text-sm font-bold text-emerald-700">&larr; Laporan Pengiriman</a>
 <h1 class="mt-1 text-2xl font-extrabold">{{ $blast->judul }}</h1>
 
+@if ($errors->any())
+  <div class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+    @foreach ($errors->all() as $e)<div>{{ $e }}</div>@endforeach
+  </div>
+@endif
 @if (session('success'))
   <div class="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">{{ session('success') }}</div>
 @endif
@@ -18,16 +23,22 @@
       <span class="text-xs text-slate-500">Dibuat {{ $blast->created_at->format('d M Y H:i') }} - jeda acak {{ $blast->delay_min }}-{{ $blast->delay_max }} detik</span>
     </div>
     <div class="flex gap-2">
+      @if ($blast->status === 'done' && $stats['failed'] > 0)
+        <form method="POST" action="{{ route('blasts.retry', $blast) }}" onsubmit="return confirm('Kirim ulang pesan yang gagal? Nomor diperbarui dari Data Mahasiswa.')">@csrf<button class="{{ $btn }} bg-emerald-700 text-white">Kirim Ulang yang Gagal</button></form>
+      @endif
+      <a href="{{ route('blasts.export', $blast) }}" class="{{ $btn }} border border-slate-300">Ekspor Excel</a>
       @if ($blast->status === 'paused')
         <form method="POST" action="{{ route('blasts.resume', $blast) }}">@csrf<button class="{{ $btn }} bg-emerald-700 text-white">Lanjutkan</button></form>
       @endif
-      @if (in_array($blast->status, ['queued', 'running', 'paused']))
+      @if (in_array($blast->status, ['scheduled', 'queued', 'running', 'paused']))
         <form method="POST" action="{{ route('blasts.cancel', $blast) }}" onsubmit="return confirm('Batalkan sisa pengiriman?')">@csrf<button class="{{ $btn }} bg-red-50 text-red-700">Batalkan</button></form>
       @endif
     </div>
   </div>
 
-  @if ($blast->status === 'paused')
+  @if ($blast->status === 'scheduled')
+    <div class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">Dijadwalkan pada <b>{{ $blast->scheduled_at->format('d M Y H:i') }}</b>. Pesan mulai dikirim otomatis pada waktu itu. Pastikan penjadwal (<b>schedule:work</b>), antrean (<b>queue:work</b>), dan WhatsApp Connected.</div>
+  @elseif ($blast->status === 'paused')
     <div class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Pengiriman dijeda karena WhatsApp tidak terhubung atau terjadi masalah. Pastikan status Connected di Dashboard, lalu klik Lanjutkan.</div>
   @elseif (in_array($blast->status, ['queued', 'running']))
     <div class="mt-3 text-xs text-slate-500">Berjalan di latar belakang, halaman ini boleh ditutup. Pastikan terminal <b>php artisan queue:work</b> menyala.</div>
@@ -66,7 +77,11 @@
             <td class="p-3 font-bold">{{ $m->nama }}</td>
             <td class="p-3">{{ $m->no_wa ?? '-' }}</td>
             <td class="p-3">@include('blasts._status', ['status' => $m->status])</td>
-            <td class="p-3 text-slate-600">{{ $m->error ?? '' }}</td>
+            <td class="p-3 text-slate-600">{{ $m->error ?? '' }}
+              @if ($m->status === 'failed' && $m->student_id)
+                <a href="{{ route('students.edit', $m->student_id) }}" class="ml-1 font-bold text-emerald-700 underline">Perbaiki nomor</a>
+              @endif
+            </td>
             <td class="p-3">{{ $m->sent_at?->format('H:i:s') ?? '-' }}</td>
           </tr>
         @empty
@@ -90,8 +105,10 @@ async function tick() {
   }
   const st = doc.getElementById('progress').dataset.status;
   if (st === 'running' || st === 'queued') setTimeout(tick, 3000);
+  else if (st === 'scheduled') setTimeout(tick, 15000);
 }
 const first = document.getElementById('progress').dataset.status;
 if (first === 'running' || first === 'queued') setTimeout(tick, 3000);
+else if (first === 'scheduled') setTimeout(tick, 15000);
 </script>
 @endpush

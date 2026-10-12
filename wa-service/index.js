@@ -123,7 +123,12 @@ app.post('/send', async (req, res) => {
     const id = await client.getNumberId(normalize(number));
     if (!id) return res.status(404).json({ ok: false, error: 'Nomor tidak terdaftar di WhatsApp' });
     const sent = await client.sendMessage(id._serialized, message);
-    res.json({ ok: true, id: sent.id._serialized });
+    // whatsapp-web.js kadang mengembalikan undefined padahal pesan SUDAH terkirim
+    // (objek pesan gagal dibentuk setelah WhatsApp Web memprosesnya). Kegagalan kirim yang
+    // sebenarnya selalu melempar error, jadi undefined di sini tidak boleh dianggap gagal.
+    const msgId = sent?.id?._serialized ?? null;
+    if (!msgId) console.warn(`sendMessage mengembalikan objek kosong untuk ${id._serialized}; dianggap terkirim`);
+    res.json({ ok: true, id: msgId });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

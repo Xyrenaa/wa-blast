@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\BlastReportExport;
 use App\Jobs\SendBlastMessage;
 use App\Models\Blast;
 use App\Models\BlastMessage;
@@ -10,9 +11,11 @@ use App\Models\Student;
 use App\Services\WhatsAppService;
 use App\Support\Phone;
 use App\Support\TemplateRenderer;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BlastController extends Controller
 {
@@ -53,10 +56,17 @@ class BlastController extends Controller
             'jurusan' => ['nullable', 'string', 'max:255'],
             'delay_min' => ['required', 'integer', 'between:3,120'],
             'delay_max' => ['required', 'integer', 'gte:delay_min', 'max:255'],
+            'kirim' => ['required', 'in:sekarang,jadwal'],
+            'jadwal' => ['required_if:kirim,jadwal', 'nullable', 'date', 'after:now'],
             'vars' => ['nullable', 'array'],
             'vars.*' => ['nullable', 'string', 'max:500'],
+        ], [
+            'jadwal.required_if' => 'Pilih tanggal dan jam pengiriman.',
+            'jadwal.date' => 'Format tanggal dan jam tidak valid.',
+            'jadwal.after' => 'Waktu jadwal harus di masa depan.',
         ]);
 
+        $scheduled = $data['kirim'] === 'jadwal' ? Carbon::parse($data['jadwal']) : null;
         $custom = $this->customValues($data['isi_pesan'], $data['vars'] ?? []);
         $query = $this->recipientQuery($data['angkatan'] ?? null, $data['jurusan'] ?? null);
         $total = (clone $query)->count();
@@ -64,17 +74,18 @@ class BlastController extends Controller
         if ($total === 0) {
             return back()->withInput()->withErrors(['penerima' => 'Tidak ada mahasiswa aktif yang cocok dengan filter.']);
         }
-        if (($wa->status()['state'] ?? 'offline') !== 'connected') {
+        if (! $scheduled && ($wa->status()['state'] ?? 'offline') !== 'connected') {
             return back()->withInput()->withErrors(['wa' => 'WhatsApp belum terhubung. Hubungkan dulu di Dashboard.']);
         }
 
-        $blast = DB::transaction(function () use ($data, $custom, $query, $total) {
+        $blast = DB::transaction(function () use ($data, $custom, $query, $total, $scheduled) {
             $blast = Blast::create([
                 'judul' => $data['judul'],
                 'message_template_id' => $data['message_template_id'] ?? null,
                 'isi_pesan' => $data['isi_pesan'],
                 'filter' => ['angkatan' => $data['angkatan'] ?? null, 'jurusan' => $data['jurusan'] ?? null, 'vars' => $custom],
-                'status' => 'queued',
+                'status' => $scheduled ? 'scheduled' : 'queued',
+                'scheduled_at' => $scheduled,
                 'total' => $total,
                 'delay_min' => $data['delay_min'],
                 'delay_max' => $data['delay_max'],
@@ -106,6 +117,11 @@ class BlastController extends Controller
             return $blast;
         });
 
+        if ($scheduled) {
+            return redirect()->route('blasts.show', $blast)
+                ->with('success', 'Blast dijadwalkan pada ' . $scheduled->format('d M Y H:i') . '. Pastikan penjadwal dan antrean menyala saat itu.');
+        }
+
         SendBlastMessage::dispatch($blast->id);
 
         return redirect()->route('blasts.show', $blast)->with('success', 'Blast dimulai. Pastikan terminal "php artisan queue:work" sedang berjalan.');
@@ -135,7 +151,7 @@ class BlastController extends Controller
 
     public function cancel(Blast $blast)
     {
-        if (! in_array($blast->status, ['queued', 'running', 'paused'], true)) {
+        if (! in_array($blast->status, ['scheduled', 'queued', 'running', 'paused'], true)) {
             return back();
         }
         $blast->update(['status' => 'cancelled', 'finished_at' => now()]);
@@ -157,6 +173,48 @@ class BlastController extends Controller
         SendBlastMessage::dispatch($blast->id);
 
         return back()->with('success', 'Pengiriman dilanjutkan.');
+    }
+
+    // Kirim ulang pesan gagal: nomor diperbarui dari Data Mahasiswa, lalu dikirim lagi
+    public function retryFailed(Blast $blast)
+    {
+        if ($blast->status !== 'done') {
+            return back()->withErrors(['retry' => 'Kirim ulang hanya bisa dilakukan setelah blast selesai.']);
+        }
+
+        $permanent = ['Nomor tidak valid', 'Nomor tidak terdaftar di WhatsApp'];
+        $reset = 0;
+
+        $blast->messages()->where('status', 'failed')->chunkById(200, function ($msgs) use (&$reset, $permanent) {
+            $students = Student::whereIn('id', $msgs->pluck('student_id')->filter())->get()->keyBy('id');
+
+            foreach ($msgs as $m) {
+                $no = $students->get($m->student_id)?->no_wa ?? $m->no_wa;
+                if (! Phone::isValid($no)) {
+                    continue; // nomor masih salah
+                }
+                if ($no === $m->no_wa && in_array($m->error, $permanent, true)) {
+                    continue; // nomor sama, hasilnya pasti sama
+                }
+                $m->update(['no_wa' => $no, 'status' => 'pending', 'error' => null, 'sent_at' => null]);
+                $reset++;
+            }
+        });
+
+        if ($reset === 0) {
+            return back()->withErrors(['retry' => 'Tidak ada pesan yang bisa dikirim ulang. Perbaiki dulu nomor yang salah di Data Mahasiswa, lalu coba lagi.']);
+        }
+
+        $blast->update(['status' => 'queued', 'finished_at' => null]);
+        $blast->refreshCounts();
+        SendBlastMessage::dispatch($blast->id);
+
+        return back()->with('success', $reset . ' pesan dikirim ulang.');
+    }
+
+    public function export(Blast $blast)
+    {
+        return Excel::download(new BlastReportExport($blast->id), 'laporan-blast-' . $blast->id . '.xlsx');
     }
 
     private function recipientQuery(?string $angkatan, ?string $jurusan)

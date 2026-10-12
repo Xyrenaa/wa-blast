@@ -1,12 +1,12 @@
 @extends('layouts.kampus')
-@section('title', 'Riwayat Blast')
+@section('title', 'Laporan Pengiriman')
 
 @section('content')
 @php $btn = 'inline-flex min-h-[44px] items-center justify-center rounded-lg px-4 text-sm font-bold'; @endphp
 <div class="flex flex-wrap items-center justify-between gap-3">
   <div>
-    <h1 class="text-2xl font-extrabold">Riwayat Blast</h1>
-    <p class="text-sm text-slate-500 mt-1">Semua pengiriman yang pernah dibuat</p>
+    <h1 class="text-2xl font-extrabold">Laporan Pengiriman</h1>
+    <p class="text-sm text-slate-500 mt-1">Pantau status tiap blast, kirim ulang yang gagal, dan ekspor ke Excel</p>
   </div>
   <a href="{{ route('blasts.create') }}" class="{{ $btn }} bg-emerald-700 text-white">+ Buat Blast Baru</a>
 </div>
@@ -16,7 +16,7 @@
     <table class="w-full text-left text-sm">
       <thead>
         <tr class="border-b border-slate-200 text-xs text-slate-500">
-          <th class="p-3">Judul</th><th class="p-3">Status</th><th class="p-3">Pesan</th><th class="p-3">Terkirim</th><th class="p-3">Gagal</th><th class="p-3">Dibuat</th>
+          <th class="p-3">Judul</th><th class="p-3">Status</th><th class="p-3">Pesan</th><th class="p-3">Terkirim</th><th class="p-3">Gagal</th><th class="p-3">Waktu</th>
         </tr>
       </thead>
       <tbody>
@@ -27,7 +27,7 @@
             <td class="p-3">{{ $b->total }}</td>
             <td class="p-3">{{ $b->sent_count }}</td>
             <td class="p-3">{{ $b->failed_count }}</td>
-            <td class="p-3">{{ $b->created_at->format('d M Y H:i') }}</td>
+            <td class="p-3">{{ ($b->scheduled_at ?? $b->created_at)->format('d M Y H:i') }}</td>
           </tr>
         @empty
           <tr><td colspan="6" class="p-8 text-center text-slate-500">Belum ada blast. Klik "Buat Blast Baru".</td></tr>

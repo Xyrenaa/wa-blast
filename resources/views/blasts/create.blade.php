@@ -13,7 +13,7 @@
     <h1 class="text-2xl font-extrabold">Buat Blast Baru</h1>
     <p class="text-sm text-slate-500 mt-1">Tulis pesan, pilih penerima, lalu kirim</p>
   </div>
-  <a href="{{ route('blasts.index') }}" class="{{ $btn }} border border-slate-300">Riwayat Blast</a>
+  <a href="{{ route('blasts.index') }}" class="{{ $btn }} border border-slate-300">Laporan Pengiriman</a>
 </div>
 
 @if ($errors->any())
@@ -69,7 +69,14 @@
     </div>
 
     <div class="{{ $card }} space-y-3">
-      <h2 class="text-base font-extrabold">3. Pengiriman</h2>
+      <h2 class="text-base font-extrabold">3. Waktu dan pengiriman</h2>
+      <div class="flex flex-wrap gap-5 text-sm font-semibold">
+        <label class="flex items-center gap-2"><input type="radio" name="kirim" value="sekarang" @checked(old('kirim', 'sekarang') === 'sekarang')> Kirim sekarang</label>
+        <label class="flex items-center gap-2"><input type="radio" name="kirim" value="jadwal" @checked(old('kirim') === 'jadwal')> Jadwalkan</label>
+      </div>
+      <label id="jadwal-wrap" class="block text-sm font-semibold">Tanggal dan jam kirim
+        <input id="jadwal-input" type="datetime-local" name="jadwal" value="{{ old('jadwal') }}" class="{{ $in }}">
+      </label>
       <div class="grid gap-3 sm:grid-cols-2">
         <label class="block text-sm font-semibold">Jeda minimum (detik)
           <input id="delay_min" type="number" name="delay_min" value="{{ old('delay_min', 5) }}" min="3" max="120" class="{{ $in }}">
@@ -78,7 +85,7 @@
           <input id="delay_max" type="number" name="delay_max" value="{{ old('delay_max', 15) }}" min="3" max="255" class="{{ $in }}">
         </label>
       </div>
-      <p class="text-xs text-slate-500">Jeda diacak di antara dua angka ini supaya nomor WhatsApp lebih aman dari pemblokiran. Penjadwalan ditambahkan di tahap berikutnya.</p>
+      <p class="text-xs text-slate-500">Jeda diacak di antara dua angka ini supaya nomor WhatsApp lebih aman dari pemblokiran. Data penerima dan nomor diambil saat blast dibuat.</p>
     </div>
   </div>
 
@@ -96,7 +103,7 @@
       <div class="flex justify-between text-sm"><span>Dilewati (nomor tidak valid)</span><b id="sum-skip">-</b></div>
       <div class="flex justify-between text-sm"><span>Estimasi selesai</span><b id="estimate">-</b></div>
       <div class="text-xs text-slate-500">Berjalan di latar belakang. Halaman boleh ditutup setelah pengiriman dimulai.</div>
-      <button class="{{ $btn }} w-full bg-emerald-700 text-white">Mulai Kirim</button>
+      <button id="submit-btn" class="{{ $btn }} w-full bg-emerald-700 text-white">Mulai Kirim</button>
     </div>
   </div>
 </form>
@@ -171,10 +178,22 @@ document.querySelectorAll('[data-var]').forEach(b => b.addEventListener('click',
   box.setRangeText('{' + b.dataset.var + '}', box.selectionStart, box.selectionEnd, 'end');
   box.focus(); renderCustom(); renderPreview();
 }));
+const mode = () => document.querySelector('input[name="kirim"]:checked').value;
+function renderMode() {
+  const jadwal = mode() === 'jadwal';
+  $('jadwal-wrap').classList.toggle('hidden', !jadwal);
+  $('jadwal-input').required = jadwal;
+  $('submit-btn').textContent = jadwal ? 'Jadwalkan Blast' : 'Mulai Kirim';
+}
+document.querySelectorAll('input[name="kirim"]').forEach(r => r.addEventListener('change', renderMode));
 $('blast-form').addEventListener('submit', e => {
-  if (!confirm('Kirim pesan ke ' + (total - invalid) + ' mahasiswa sekarang?')) e.preventDefault();
+  const n = total - invalid;
+  const msg = mode() === 'jadwal'
+    ? 'Jadwalkan pengiriman ke ' + n + ' mahasiswa pada ' + $('jadwal-input').value.replace('T', ' ') + '?'
+    : 'Kirim pesan ke ' + n + ' mahasiswa sekarang?';
+  if (!confirm(msg)) e.preventDefault();
 });
 
-renderCustom(); renderPreview(); loadRecipients();
+renderCustom(); renderPreview(); loadRecipients(); renderMode();
 </script>
 @endpush

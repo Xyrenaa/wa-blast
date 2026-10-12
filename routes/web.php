@@ -7,9 +7,9 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\MessageTemplateController;
 use App\Http\Controllers\BlastController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+   Route::get('/', fn () => auth()->check()
+       ? redirect()->route('dashboard')
+       : redirect()->route('login'));
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -26,4 +26,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/blasts/{blast}', [BlastController::class, 'show'])->name('blasts.show');
     Route::post('/blasts/{blast}/cancel', [BlastController::class, 'cancel'])->name('blasts.cancel');
     Route::post('/blasts/{blast}/resume', [BlastController::class, 'resume'])->name('blasts.resume');
+    Route::get('/blasts/{blast}/export', [BlastController::class, 'export'])->name('blasts.export');
+    Route::post('/blasts/{blast}/retry', [BlastController::class, 'retryFailed'])->name('blasts.retry');
 });
+
+require __DIR__.'/auth.php';

@@ -9,3 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('blasts:dispatch-due')->everyMinute()->withoutOverlapping();
+Schedule::command('queue:work --max-time=58 --sleep=1')->everyMinute()->withoutOverlapping(2)->runInBackground();
+

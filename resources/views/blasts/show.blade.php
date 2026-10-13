@@ -24,14 +24,14 @@
     </div>
     <div class="flex gap-2">
       @if ($blast->status === 'done' && $stats['failed'] > 0)
-        <form method="POST" action="{{ route('blasts.retry', $blast) }}" onsubmit="return confirm('Kirim ulang pesan yang gagal? Nomor diperbarui dari Data Mahasiswa.')">@csrf<button class="{{ $btn }} bg-emerald-700 text-white">Kirim Ulang yang Gagal</button></form>
+        <form method="POST" action="{{ route('blasts.retry', $blast) }}" data-confirm="Pesan yang gagal dikirim lagi. Nomor diperbarui dulu dari Data Mahasiswa." data-confirm-title="Kirim ulang yang gagal?" data-confirm-ok="Ya, kirim ulang">@csrf<button class="{{ $btn }} bg-emerald-700 text-white">Kirim Ulang yang Gagal</button></form>
       @endif
       <a href="{{ route('blasts.export', $blast) }}" class="{{ $btn }} border border-slate-300">Ekspor Excel</a>
       @if ($blast->status === 'paused')
         <form method="POST" action="{{ route('blasts.resume', $blast) }}">@csrf<button class="{{ $btn }} bg-emerald-700 text-white">Lanjutkan</button></form>
       @endif
       @if (in_array($blast->status, ['scheduled', 'queued', 'running', 'paused']))
-        <form method="POST" action="{{ route('blasts.cancel', $blast) }}" onsubmit="return confirm('Batalkan sisa pengiriman?')">@csrf<button class="{{ $btn }} bg-red-50 text-red-700">Batalkan</button></form>
+        <form method="POST" action="{{ route('blasts.cancel', $blast) }}" data-confirm="Pesan yang belum terkirim tidak akan dikirim. Yang sudah terkirim tidak bisa ditarik." data-confirm-title="Batalkan blast?" data-confirm-ok="Ya, batalkan" data-confirm-danger>@csrf<button class="{{ $btn }} bg-red-50 text-red-700">Batalkan</button></form>
       @endif
     </div>
   </div>
@@ -50,10 +50,10 @@
   </div>
 
   <div class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-    <div class="rounded-xl bg-slate-50 p-4"><div class="text-xs font-semibold text-slate-500">Total</div><div class="text-2xl font-extrabold">{{ $blast->total }}</div></div>
-    <div class="rounded-xl bg-green-50 p-4"><div class="text-xs font-semibold text-green-800">Terkirim</div><div class="text-2xl font-extrabold text-green-800">{{ $stats['sent'] }}</div></div>
-    <div class="rounded-xl bg-red-50 p-4"><div class="text-xs font-semibold text-red-700">Gagal</div><div class="text-2xl font-extrabold text-red-700">{{ $stats['failed'] }}</div></div>
-    <div class="rounded-xl bg-amber-50 p-4"><div class="text-xs font-semibold text-amber-800">Menunggu</div><div class="text-2xl font-extrabold text-amber-800">{{ $stats['pending'] }}</div></div>
+    <div class="lift rounded-xl bg-slate-50 p-4"><div class="text-xs font-semibold text-slate-500">Total</div><div class="text-2xl font-extrabold">{{ $blast->total }}</div></div>
+    <div class="lift rounded-xl bg-green-50 p-4"><div class="text-xs font-semibold text-green-800">Terkirim</div><div class="text-2xl font-extrabold text-green-800">{{ $stats['sent'] }}</div></div>
+    <div class="lift rounded-xl bg-red-50 p-4"><div class="text-xs font-semibold text-red-700">Gagal</div><div class="text-2xl font-extrabold text-red-700">{{ $stats['failed'] }}</div></div>
+    <div class="lift rounded-xl bg-amber-50 p-4"><div class="text-xs font-semibold text-amber-800">Menunggu</div><div class="text-2xl font-extrabold text-amber-800">{{ $stats['pending'] }}</div></div>
   </div>
 </div>
 
@@ -61,7 +61,7 @@
   <div class="mb-3 flex flex-wrap gap-2 text-xs font-bold">
     @foreach (['' => 'Semua', 'sent' => 'Terkirim', 'failed' => 'Gagal', 'pending' => 'Menunggu'] as $key => $label)
       <a href="{{ route('blasts.show', array_filter(['blast' => $blast->id, 'status' => $key])) }}"
-         class="rounded-full px-3 py-1.5 {{ (request('status') ?? '') === $key ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700' }}">{{ $label }}</a>
+         class="rounded-full px-3 py-1.5 {{ (request('status') ?? '') === $key ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-700' }}">{{ $label }}</a>
     @endforeach
   </div>
   <div class="overflow-x-auto">
@@ -90,7 +90,7 @@
       </tbody>
     </table>
   </div>
-  <div class="mt-4">{{ $messages->links() }}</div>
+  <div class="mt-4">{{ $messages->links('pagination.kampus') }}</div>
 </div>
 @endsection
 

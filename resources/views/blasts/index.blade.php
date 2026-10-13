@@ -35,6 +35,6 @@
       </tbody>
     </table>
   </div>
-  <div class="mt-4">{{ $blasts->links() }}</div>
+  <div class="mt-4">{{ $blasts->links('pagination.kampus') }}</div>
 </div>
 @endsection

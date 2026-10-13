@@ -39,15 +39,38 @@
   </div>
 @endif
 
-<details class="mt-4 rounded-2xl border border-slate-200 bg-white p-5" {{ $errors->has('file') ? 'open' : '' }}>
-  <summary class="cursor-pointer text-sm font-bold">Import dari Excel</summary>
-  <form method="POST" action="{{ route('students.import') }}" enctype="multipart/form-data" class="mt-4 flex flex-wrap items-center gap-3">
+<details class="group mt-4 rounded-2xl border border-slate-200 bg-white" {{ $errors->has('file') ? 'open' : '' }}>
+  <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
+    <span class="flex items-center gap-3">
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+      </span>
+      <span>
+        <span class="block text-sm font-extrabold">Import dari Excel</span>
+        <span class="block text-xs text-slate-500">Unggah data mahasiswa sekali, dipakai di semua blast</span>
+      </span>
+    </span>
+    <svg class="h-5 w-5 text-slate-400 transition-transform duration-200 group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+  </summary>
+
+  <form id="import-form" method="POST" action="{{ route('students.import') }}" enctype="multipart/form-data" class="border-t border-slate-100 p-5">
     @csrf
-    <input type="file" name="file" accept=".xlsx,.xls,.csv" required class="text-sm">
-    <button class="{{ $btn }} bg-emerald-700 text-white">Upload dan Proses</button>
-    <a href="{{ route('students.template') }}" class="text-sm font-bold text-emerald-700">Unduh template Excel</a>
+    <label id="drop" for="file" class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/50 px-4 py-8 text-center transition hover:bg-emerald-50">
+      <svg class="h-9 w-9 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+      <span id="file-title" class="max-w-full truncate text-sm font-bold">Tarik file ke sini atau klik untuk memilih</span>
+      <span id="file-sub" class="text-xs text-slate-500">Excel (.xlsx, .xls) atau CSV, maksimal 5 MB</span>
+    </label>
+    <input id="file" type="file" name="file" accept=".xlsx,.xls,.csv" class="sr-only" required>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button id="import-btn" disabled class="{{ $btn }} gap-2 bg-emerald-700 text-white disabled:cursor-not-allowed disabled:opacity-40">Upload dan Proses</button>
+      <a href="{{ route('students.template') }}" class="{{ $btn }} gap-2 border border-slate-300">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+        Unduh template Excel
+      </a>
+    </div>
+    <p class="mt-3 text-xs leading-relaxed text-slate-500">Tidak wajib memakai template: kolom dikenali otomatis dari judulnya (nim/npm, nama, prodi/jurusan, telepon/no_wa/hp, angkatan). Angkatan yang kosong diambil dari 2 digit awal NIM. NIM yang sudah ada diperbarui. Hanya sheet pertama yang dibaca.</p>
   </form>
-  <p class="mt-3 text-xs text-slate-500">Tidak wajib memakai template. Kolom dikenali otomatis dari judulnya: nim/npm, nama, prodi/jurusan, telepon/no_wa/hp, angkatan. Kalau tidak ada kolom angkatan, diambil dari 2 digit awal NIM. NIM yang sudah ada akan diperbarui. Hanya sheet pertama yang dibaca.</p>
 </details>
 
 <form method="GET" class="mt-4 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-5">
@@ -71,7 +94,7 @@
       <option value="0" @selected(request('status') === '0')>Nonaktif</option>
     </select>
   </label>
-  <button class="{{ $btn }} bg-slate-800 text-white">Terapkan</button>
+  <button class="{{ $btn }} border border-emerald-200 bg-emerald-50 text-emerald-800">Terapkan</button>
 </form>
 
 <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
@@ -102,7 +125,7 @@
             </td>
             <td class="whitespace-nowrap p-3">
               <a href="{{ route('students.edit', $s) }}" class="{{ $btn }} border border-slate-300">Edit</a>
-              <form method="POST" action="{{ route('students.destroy', $s) }}" class="inline" onsubmit="return confirm('Hapus data mahasiswa ini?')">
+              <form method="POST" action="{{ route('students.destroy', $s) }}" class="inline" data-confirm="Data mahasiswa ini akan dihapus permanen." data-confirm-title="Hapus mahasiswa?" data-confirm-ok="Hapus" data-confirm-danger>
                 @csrf @method('DELETE')
                 <button class="{{ $btn }} bg-red-50 text-red-700">Hapus</button>
               </form>
@@ -114,6 +137,46 @@
       </tbody>
     </table>
   </div>
-  <div class="mt-4">{{ $students->links() }}</div>
+  <div class="mt-4">{{ $students->links('pagination.kampus') }}</div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+const fileInput = document.getElementById('file'), drop = document.getElementById('drop');
+const fTitle = document.getElementById('file-title'), fSub = document.getElementById('file-sub');
+const importBtn = document.getElementById('import-btn'), importForm = document.getElementById('import-form');
+const idle = {t: fTitle.textContent, s: fSub.textContent};
+const MAX = 5 * 1048576;
+
+function showFile() {
+  const f = fileInput.files[0];
+  fSub.classList.remove('text-red-600', 'font-bold');
+  if (!f) { fTitle.textContent = idle.t; fSub.textContent = idle.s; importBtn.disabled = true; return; }
+  fTitle.textContent = f.name;
+  if (f.size > MAX) {
+    fSub.textContent = 'File terlalu besar (maksimal 5 MB)';
+    fSub.classList.add('text-red-600', 'font-bold');
+    importBtn.disabled = true;
+    return;
+  }
+  fSub.textContent = (f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB') + ' - siap diupload';
+  importBtn.disabled = false;
+}
+
+fileInput.addEventListener('change', showFile);
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add('bg-emerald-100', 'border-emerald-500');
+}));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove('bg-emerald-100', 'border-emerald-500');
+}));
+drop.addEventListener('drop', e => {
+  if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; showFile(); }
+});
+importForm.addEventListener('submit', () => {
+  importBtn.disabled = true;
+  importBtn.innerHTML = '<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Memproses...';
+});
+</script>
+@endpush

@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>@yield('title') - KampusBlast</title>
+<title>@yield('title') - KabariBlast</title>
+<link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 {{-- Tailwind CDN untuk development. Untuk produksi pindahkan ke Vite. --}}
 <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +14,7 @@
 <div class="flex min-h-screen flex-wrap">
   <aside class="w-full md:w-60 bg-[#0c3b2c] text-white p-4 flex flex-col gap-1">
     <div class="flex items-center gap-2.5 px-2 pb-5 text-lg font-extrabold">
-      <span class="w-8 h-8 rounded-lg bg-[#25d366]"></span>KampusBlast
+      <x-kabari-logo class="h-8 w-8 shrink-0" aria-hidden="true" />KabariBlast
     </div>
     @php
       $nav = ['Dashboard' => 'dashboard', 'Buat Blast' => null, 'Template Pesan' => null, 'Data Mahasiswa' => null, 'Laporan Pengiriman' => null];

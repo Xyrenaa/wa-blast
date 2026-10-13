@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>@yield('title') - KampusBlast</title>
+<title>@yield('title') - KabariBlast</title>
+<link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 {{-- Tailwind CDN untuk development. Untuk produksi pindahkan ke Vite. --}}
 <script src="https://cdn.tailwindcss.com"></script>
@@ -35,7 +36,7 @@ button:active{transform:scale(.98)}
     <div class="absolute -bottom-10 right-40 h-40 w-40 rounded-full bg-[#17513c]"></div>
 
     <div class="relative flex items-center gap-3 text-xl font-extrabold">
-      <span class="h-10 w-10 rounded-xl bg-[#25d366]"></span>KampusBlast
+      <x-kabari-logo class="h-10 w-10 shrink-0" aria-hidden="true" />KabariBlast
     </div>
 
     <div class="relative max-w-md">
@@ -52,14 +53,14 @@ button:active{transform:scale(.98)}
       </div>
     </div>
 
-    <div class="relative text-xs text-[#9fc4b2]">&copy; {{ date('Y') }} KampusBlast</div>
+    <div class="relative text-xs text-[#9fc4b2]">&copy; {{ date('Y') }} KabariBlast</div>
   </aside>
 
   {{-- Panel kanan: form --}}
   <main class="flex items-center justify-center bg-[#f3f6f3] p-6">
     <div class="fx-card w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
       <div class="mb-6 flex items-center gap-2.5 text-lg font-extrabold lg:hidden">
-        <span class="h-8 w-8 rounded-lg bg-[#25d366]"></span>KampusBlast
+        <x-kabari-logo class="h-8 w-8 shrink-0" aria-hidden="true" />KabariBlast
       </div>
       @yield('content')
     </div>

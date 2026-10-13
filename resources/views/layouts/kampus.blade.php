@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>@yield('title') - KampusBlast</title>
+<title>@yield('title') - KabariBlast</title>
+<link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 {{-- Tailwind CDN untuk development. Untuk produksi pindahkan ke Vite. --}}
 <script src="https://cdn.tailwindcss.com"></script>
@@ -34,9 +35,10 @@ input,select,textarea{transition:border-color .15s,box-shadow .15s}
 </head>
 <body class="bg-[#f3f6f3] text-[#14231c]">
 <div class="flex min-h-screen flex-wrap">
-  <aside class="w-full md:w-60 bg-[#0c3b2c] text-white p-4 flex flex-col gap-1">
+  {{-- md ke atas: sidebar menempel di layar (tidak ikut scroll), tinggi = layar, isinya bisa di-scroll sendiri bila layar pendek --}}
+  <aside class="w-full md:w-60 md:shrink-0 md:sticky md:top-0 md:self-start md:h-screen md:overflow-y-auto md:overflow-x-hidden bg-[#0c3b2c] text-white p-4 flex flex-col gap-1">
     <div class="flex items-center gap-2.5 px-2 pb-5 text-lg font-extrabold">
-      <span class="w-8 h-8 rounded-lg bg-[#25d366]"></span>KampusBlast
+      <x-kabari-logo class="h-8 w-8 shrink-0" aria-hidden="true" />KabariBlast
     </div>
     @php
       $nav = [
@@ -53,7 +55,7 @@ input,select,textarea{transition:border-color .15s,box-shadow .15s}
     @endforeach
       <div class="mt-auto border-t border-white/10 pt-4">
       <div class="px-3 pb-2 text-xs text-[#9fc4b2]">Masuk sebagai<br><span class="text-sm font-bold text-white">{{ auth()->user()?->name }}</span></div>
-      <form method="POST" action="{{ route('logout') }}" data-confirm="Kamu akan keluar dari KampusBlast." data-confirm-title="Keluar dari akun?" data-confirm-ok="Keluar">
+      <form method="POST" action="{{ route('logout') }}" data-confirm="Kamu akan keluar dari KabariBlast." data-confirm-title="Keluar dari akun?" data-confirm-ok="Keluar">
         @csrf
         <button class="min-h-[44px] w-full rounded-lg px-3 text-left text-sm font-semibold text-[#b9d3c6] hover:bg-[#104a37]">Keluar</button>
       </form>
@@ -61,7 +63,7 @@ input,select,textarea{transition:border-color .15s,box-shadow .15s}
   </aside>
   <main class="flex-1 min-w-0 p-6 md:p-9">@yield('content')</main>
 </div>
-{{-- Pop up konfirmasi bergaya KampusBlast (pengganti confirm bawaan browser) --}}
+{{-- Pop up konfirmasi bergaya KabariBlast (pengganti confirm bawaan browser) --}}
 <div id="dlg" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 opacity-0 transition-opacity duration-150">
   <div id="dlg-box" class="w-full max-w-sm scale-95 rounded-2xl bg-white p-6 opacity-0 shadow-xl transition duration-150">
     <h3 id="dlg-title" class="text-lg font-extrabold"></h3>

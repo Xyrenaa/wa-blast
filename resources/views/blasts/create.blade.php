@@ -13,7 +13,7 @@
 <div class="flex flex-wrap items-center justify-between gap-3">
   <div>
     <h1 class="text-2xl font-extrabold">Buat Blast Baru</h1>
-    <p class="mt-1 text-sm text-slate-500">Tiga langkah: tulis pesan, pilih penerima, atur waktu kirim</p>
+    <p class="mt-1 text-sm text-slate-500">Tulis pesan, Pilih penerima, Atur waktu kirim</p>
   </div>
   <a href="{{ route('blasts.index') }}" class="{{ $btn }} border border-slate-300">Laporan Pengiriman</a>
 </div>
@@ -136,7 +136,7 @@
       </label>
 
       <details class="mt-4 rounded-lg border border-slate-200 px-4 py-3" {{ $errors->has('delay_min') || $errors->has('delay_max') ? 'open' : '' }}>
-        <summary class="cursor-pointer text-sm font-bold">Pengaturan lanjutan: jeda antar pesan</summary>
+        <summary class="cursor-pointer text-sm font-bold">Pengaturan lanjutan</summary>
         <p class="mt-2 text-xs leading-relaxed text-slate-500">Pesan dikirim satu per satu dengan jeda acak agar nomor WhatsApp lebih aman dari pemblokiran. Biarkan bawaan kalau ragu. Data penerima dan nomor diambil saat blast dibuat.</p>
         <div class="mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold">
           Antara

@@ -10,7 +10,7 @@
 <div class="flex flex-wrap items-center justify-between gap-3">
   <div>
     <h1 class="text-2xl font-extrabold">Data Mahasiswa</h1>
-    <p class="text-sm text-slate-500 mt-1">Database penerima: cukup diunggah sekali, dipakai di semua blast</p>
+    <p class="text-sm text-slate-500 mt-1">Import data untuk otomatis menambahkan data</p>
   </div>
   <a href="{{ route('students.create') }}" class="{{ $btn }} bg-emerald-700 text-white">+ Tambah Mahasiswa</a>
 </div>

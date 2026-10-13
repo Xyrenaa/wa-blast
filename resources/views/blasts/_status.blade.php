@@ -6,7 +6,7 @@
     'running' => ['Berjalan', 'bg-blue-100 text-blue-700'],
     'paused' => ['Dijeda', 'bg-red-100 text-red-700'],
     'done' => ['Selesai', 'bg-green-100 text-green-800'],
-    'cancelled' => ['Dibatalkan', 'bg-slate-100 text-slate-700'],
+    'cancelled' => ['Dibatalkan', 'bg-red-200 text-red-700'],
     'pending' => ['Menunggu', 'bg-amber-100 text-amber-800'],
     'sending' => ['Mengirim', 'bg-blue-100 text-blue-700'],
     'sent' => ['Terkirim', 'bg-green-100 text-green-800'],

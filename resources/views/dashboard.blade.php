@@ -23,7 +23,7 @@
 <div class="mt-5 grid gap-4 sm:grid-cols-3">
   <div class="lift rounded-2xl border border-slate-200 bg-white p-5"><div class="text-xs font-semibold text-slate-500">Pesan terkirim bulan ini</div><div class="my-1 text-3xl font-extrabold" data-count="{{ $sentThisMonth }}">{{ number_format($sentThisMonth, 0, ',', '.') }}</div></div>
   <div class="lift rounded-2xl border border-slate-200 bg-white p-5"><div class="text-xs font-semibold text-slate-500">Pesan gagal bulan ini</div><div class="my-1 text-3xl font-extrabold text-red-700" data-count="{{ $failedThisMonth }}">{{ number_format($failedThisMonth, 0, ',', '.') }}</div></div>
-  <div class="lift rounded-2xl border border-slate-200 bg-white p-5"><div class="text-xs font-semibold text-slate-500">Mahasiswa di database</div><div class="my-1 text-3xl font-extrabold" data-count="{{ $totalStudents }}">{{ number_format($totalStudents, 0, ',', '.') }}</div></div>
+  <div class="lift rounded-2xl border border-slate-200 bg-white p-5"><div class="text-xs font-semibold text-slate-500">Total Mahasiswa</div><div class="my-1 text-3xl font-extrabold" data-count="{{ $totalStudents }}">{{ number_format($totalStudents, 0, ',', '.') }}</div></div>
 </div>
 
 <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-5">
